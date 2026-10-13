@@ -22,6 +22,20 @@ was written without access to `src/analytic_*`. No human expert has yet checked 
 Read `paper/erdos848.pdf` first. `NOTE.md` is the working note; `RESULTS.md` is the verification record;
 `results/` contains the raw outputs.
 
+## Lean formalisation (in progress)
+
+`lean848/` is a Lean 4 + Mathlib project. Build it with `cd lean848 && lake exe cache get && lake build`. Every
+result below is proved with no `sorry`, and `#print axioms` shows only the standard axioms (`propext`,
+`Classical.choice`, `Quot.sound`):
+
+- the witness facts mod 25 and mod 4 (paper Lemma 3);
+- `4 ∤ n²+1`; `p ≡ 3 (mod 4)` ⇒ `p ∤ n²+1`; `25 ∣ n²+1 ⇔ n ≡ ±7 (mod 25)`;
+- the residue class 7 mod 25 is admissible;
+- **the large-prime lemma** (paper Lemma 6), integer form `large_prime_count`.
+
+Not yet formalised: the inclusion–exclusion and R-target lemmas (Lemmas 7–9), the Pell bound, the pattern
+argument, and the link to the numerical certificates.
+
 ## Reproduce
 
 `./reproduce.sh` takes about 1.5 h on 16 cores and needs a C compiler, Python 3 (numpy, python-flint), PARI/GP
