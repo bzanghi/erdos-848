@@ -36,6 +36,10 @@ result below is proved with no `sorry`, and `#print axioms` shows only the stand
 Not yet formalised: the inclusion–exclusion and R-target lemmas (Lemmas 7–9), the Pell bound, the pattern
 argument, and the link to the numerical certificates.
 
+## Verify with your own AI
+
+See [`VERIFY_WITH_AI.md`](VERIFY_WITH_AI.md): a paste-ready referee brief for an independent AI system, with tasks and a report format.
+
 ## Reproduce
 
 `./reproduce.sh` takes about 1.5 h on 16 cores and needs a C compiler, Python 3 (numpy, python-flint), PARI/GP
