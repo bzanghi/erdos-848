@@ -1,0 +1,362 @@
+\documentclass[11pt]{amsart}
+\usepackage[margin=1.1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,booktabs,hyperref,enumitem}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\sqf}{squarefree}
+\DeclareMathOperator{\lcm}{lcm}
+
+\title[Erd\H{o}s Problem \#848 for all $N$]{Erd\H{o}s Problem \#848 holds for every $N$:\\ a computer-assisted completion of Sawhney's theorem}
+\author{Ben Zanghi}
+\date{Draft of 12 October 2026 --- not yet refereed}
+
+\begin{document}
+
+\begin{abstract}
+Erd\H{o}s and S\'ark\"ozy asked whether the largest $A\subseteq\{1,\dots,N\}$ such that $ab+1$ is never
+squarefree for $a,b\in A$ is given by the residue class $7 \bmod 25$. Sawhney proved this for all sufficiently
+large $N$; the best explicit threshold previously available was $N_0=\exp(1420)$. We prove the statement for
+every $N\ge 1$ (with $a=b$ allowed). The proof has three parts: an exact computation for $N\le 10^4$, a
+dynamically maintained colouring certificate for $10^4\le N\le 10^9$ that is replayed by an independent
+verifier, and a new elementary explicit argument for $N\ge 5\cdot 10^8$ whose numerical inequalities are
+checked in interval arithmetic. The argument for large $N$ is self-contained and does not use Sawhney's
+stability theorem.
+\end{abstract}
+
+\maketitle
+
+\noindent\textbf{Disclosure.} This work was carried out with substantial assistance from an AI system
+(Claude, Anthropic), which wrote the code and drafted the argument and this manuscript. All computations
+are reproducible from the accompanying code; see Section~\ref{sec:repro}. An independent AI review
+re-implemented the analytic bounds without access to our code. The manuscript has not yet been checked by a
+human expert, and the author welcomes scrutiny.
+
+\section{Introduction}
+
+For $N\ge1$ call $A\subseteq[1,N]$ \emph{admissible} if $ab+1$ is not squarefree for all $a,b\in A$
+(including $a=b$). Let
+\[
+  M(N)=\#\{n\le N:\ n\equiv 7 \pmod{25}\}.
+\]
+The set $P_7(N)=\{n\le N: n\equiv 7\ (25)\}$ is admissible since $ab+1\equiv 50\equiv 0\pmod{25}$.
+Erd\H{o}s and S\'ark\"ozy \cite[p.~239]{Er92b} asked whether it is maximal; this is Problem~\#848 in Bloom's
+database \cite{EP848}. Van Doorn observed that every admissible set has density at most
+$2\sum_{p\equiv1(4)}p^{-2}\approx 0.108$, Weisenberg improved this to $\approx0.105$, and Sawhney
+\cite{Sa25} proved that the answer is yes for all sufficiently large $N$, together with a stability
+statement. An explicit version of Sawhney's argument, produced with AI assistance by Sothanaphan and others,
+gives the threshold $N_0=\exp(1420)$ \cite{So26}. Direct computation had been carried out for $N$ up to a few
+hundred.
+
+\begin{theorem}\label{thm:main}
+For every $N\ge1$ and every admissible $A\subseteq[1,N]$ we have $|A|\le M(N)$. In particular, the
+residue class $7\bmod 25$ is a maximum admissible set for every $N$.
+\end{theorem}
+
+\begin{remark}
+If one only requires $ab+1$ to be non-squarefree for $a\ne b$, the statement is different for small $N$:
+Cambie noted that $\{19,33,35,46,53\}$ is such a set. Our argument uses the diagonal condition in an essential
+way, through the restriction that $a^2+1$ is non-squarefree, and does not address that variant.
+\end{remark}
+
+\subsection*{Strategy}
+Let $G_N$ be the graph whose vertices are the $n\le N$ with $n^2+1$ non-squarefree, with $a\sim b$
+(for $a\ne b$) iff $ab+1$ is non-squarefree. Admissible sets are exactly the cliques of $G_N$, so
+Theorem~\ref{thm:main} says $\omega(G_N)=M(N)$. We prove it in three overlapping ranges:
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+range & method & section\\
+\midrule
+$1\le N\le 10^4$ & exact clique number (two independent programs) & \ref{sec:small}\\
+$9982\le N\le 10^9$ & colouring certificate + independent verifier & \ref{sec:cert}\\
+$N\ge 5\cdot 10^8$ & explicit inequalities (interval arithmetic) & \ref{sec:analytic}\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Preliminaries}\label{sec:prelim}
+
+Since $n^2\equiv 0,1\pmod 4$, we have $4\nmid n^2+1$. If $p\equiv3\pmod4$ then $p\nmid n^2+1$. Hence $n^2+1$ is
+non-squarefree iff $q^2\mid n^2+1$ for some prime $q\equiv1\pmod4$. For such $q$ let
+$S_q=\{n:\ q^2\mid n^2+1\}$, which is the union of two residue classes $\pm i_q\bmod q^2$. Since
+$25\mid n^2+1\iff n\equiv\pm7\pmod{25}$, the vertex set of $G_N$ is the disjoint union
+\[
+  P_7=\{n\equiv7\},\qquad P_{18}=\{n\equiv18\},\qquad R\subseteq \bigcup_{q\ge13,\ q\equiv1(4)} S_q,
+\]
+where all three are intersected with $[1,N]$ and $R$ denotes the remaining vertices. Note
+$|P_{18}|\le|P_7|=M(N)$, and both $P_7$ and $P_{18}$ are cliques.
+
+For a clique $A$ we write $X=A\cap P_7$, $Y=A\cap P_{18}$ and $C=A\cap R$.
+
+\begin{lemma}[witness facts]\label{lem:witness}
+Let $w,z,h,r$ be positive integers.
+\begin{enumerate}[label=(\roman*)]
+\item If $z\equiv7\pmod{25}$, then $25\mid wz+1$ iff $w\equiv7\pmod{25}$. If $z\equiv18\pmod{25}$, then
+  $25\mid wz+1$ iff $w\equiv18\pmod{25}$.
+\item If $h\equiv\pm7\pmod{25}$ and $r\not\equiv\pm7\pmod{25}$, then $25\nmid hr+1$.
+\item $4\mid wz+1$ iff $wz\equiv3\pmod 4$, i.e.\ iff $\{w\bmod4,\,z\bmod4\}=\{1,3\}$.
+\end{enumerate}
+\end{lemma}
+\begin{proof}
+(i) $7^{-1}\equiv18$ and $18^{-1}\equiv7\pmod{25}$, so $7w\equiv-1$ iff $w\equiv-18\equiv7$, and similarly for
+18. (ii) $h^2\equiv-1$ gives $h^{-1}\equiv-h$, so $25\mid hr+1$ iff $r\equiv-h^{-1}\equiv h\pmod{25}$, which is
+excluded. (iii) This is immediate.
+\end{proof}
+
+Consequently, if $A$ is a clique, then every element of $Y\cup C$ is a \emph{witness} for $X$: $X$ lies in
+its neighbourhood, and for $f\in Y\cup C$ and $z\in X$, $fz+1$ must be divisible by $p^2$ for some prime
+$p\ne5$. Likewise $X\cup C$ are witnesses for $Y$, and $X\cup Y$ are witnesses for $C$. Whether $p=2$ is
+available is decided by residues mod~4.
+
+\section{Small \texorpdfstring{$N$}{N}}\label{sec:small}
+
+For every $N\le10^4$ we computed $\omega(G_N)$ exactly with a branch-and-bound clique algorithm using greedy
+colouring bounds on bitsets (\texttt{maxclique\_small.c}). In all cases $\omega(G_N)=M(N)$. An independent
+implementation in Python (Bron--Kerbosch with pivoting and naive squarefree tests, \texttt{bk\_check.py})
+confirms this for all $N\le5000$.
+
+\begin{remark}
+$G_N$ is not always $M(N)$-colourable \emph{monotonically}. For instance, at $N=43$ the vertices are
+$7,18,32,38,41,43$. Here $18\sim43$, $7\sim32$ and $43\sim32$; a 2-colouring exists ($\{7,43,38\}$,
+$\{32,18,41\}$), but it cannot be extended consistently from smaller $N$. This is why the certificate below
+starts at $N_0=9982$.
+\end{remark}
+
+\section{The colouring certificate for \texorpdfstring{$9982\le N\le10^9$}{9982 <= N <= 10^9}}\label{sec:cert}
+
+If the vertex set of $G_N$ is covered by $M(N)$ independent sets, then $\omega(G_N)\le M(N)$. We construct such
+covers for all $N$ in the range at once.
+
+\begin{proposition}\label{prop:cert}
+Let $N_0=9982$ and $N_1=10^9$. There is a sequence of operations, recorded in a log file, of three types:
+\emph{create anchor $x$} ($x\equiv7\bmod25$); \emph{add $v$ to class $x$}; and \emph{move $u$ to class $x$}.
+It has the following properties.
+\begin{enumerate}[label=(\alph*)]
+\item All anchors $x\le N_0$ are created first. Anchors $x>N_0$ are created in increasing order, interleaved
+  with the adds.
+\item Every vertex $v\le N_1$ of $G_{N_1}$ with $v\not\equiv7\pmod{25}$ is added exactly once. The adds occur
+  in increasing order of $v$.
+\item Every add or move into class $x$ happens at a time $t$, namely the vertex currently being inserted, with
+  $x\le\max(t,N_0)$. The moved or added vertex is non-adjacent to $x$ and to every current member of
+  class $x$.
+\end{enumerate}
+\end{proposition}
+
+\begin{corollary}
+For every $N_0\le N\le N_1$, $\omega(G_N)\le M(N)$.
+\end{corollary}
+\begin{proof}
+Consider the state immediately after all vertices $\le N$ have been inserted. By (c), each class is an
+independent set, since classes only ever receive vertices non-adjacent to all current members, and removals
+preserve independence. By (b), every vertex $\le N$ lies in some class, and that class's anchor is
+$\le\max(N,N_0)=N$. Hence $V(G_N)$ is covered by the at most $M(N)$ classes with anchor $\le N$.
+\end{proof}
+
+The log is produced by \texttt{dyn\_colour.c}. Each vertex is placed into a random compatible class; if none
+is found, one conflicting member is moved to another class (a depth-one augmenting step). Elements of $P_{18}$
+are pairwise adjacent and roughly as numerous as anchors, so at almost every time step exactly one class
+lacks a $P_{18}$ element; the augmenting moves handle this. For $N_1=10^9$ the run inserts $105{,}158{,}686$
+vertices with $13{,}806{,}588$ moves.
+
+The log is checked by \texttt{verify\_log.c}, which was written independently of the generator and uses
+different algorithms. It recomputes the vertex set using $\sqrt{-1}\equiv g^{q(q-1)/4}\pmod{q^2}$ (where $g$ is
+a non-residue mod $q$), rather than Hensel lifting, and checks every root. It replays every operation and
+checks (a)--(c). It decides squarefreeness of every one of the $121{,}112{,}532$ products $ab+1$ claimed
+non-adjacent by trial division by all primes up to $(ab+1)^{1/3}$, followed by an exact perfect-square test
+of the cofactor. If no prime $p\le n^{1/3}$ divides $n$, then $n$ has at most two prime factors, so it is
+squarefree unless it is the square of a prime. The verifier rejects deliberately corrupted logs. All pairs
+were additionally re-checked with PARI/GP's \texttt{uissquarefree} (Section~\ref{sec:repro}).
+
+\section{Large \texorpdfstring{$N$}{N}: an explicit argument}\label{sec:analytic}
+
+Throughout, $p,q$ denote primes, $\lambda(w)=\#\{u\bmod w:\ u^2\equiv1\pmod w\}$, and $P_1=P_2=Q=1000$.
+
+\begin{lemma}[large prime squares]\label{lem:LP}
+For $1\le w\le N$ and $V\ge1$,
+\[
+\#\{z\le N:\ p^2\mid wz+1\ \text{for some } p>V\}\ \le\ \lambda(w)\Big(\frac{N^2+1}{V^2}+\frac{2(N+1)}{V}+1\Big).
+\]
+\end{lemma}
+\begin{proof}
+If $p^2\mid wz+1$ with $p>V$, write $wz+1=mp^2$. Then $1\le m\le K:=(wN+1)/V^2$ and $mp^2\equiv1\pmod w$. The
+pair $(m,p)$ determines $z$. For fixed $m$, if $u_0$ satisfies $mu_0^2\equiv1\pmod w$ then $u_0$ is a unit, and
+the solutions mod $w$ are exactly $u_0s$ with $s^2\equiv1$. So the integers $u\le U_m:=\sqrt{(wN+1)/m}$ with
+$mu^2\equiv1$ number at most $\lambda(w)(U_m/w+1)$. Summing over $m\le K$ and using
+$\sum_{m\le K}m^{-1/2}\le2\sqrt K$ gives at most
+$\lambda(w)\big(K+2\sqrt{K(wN+1)}/w\big)=\lambda(w)\big(K+2(wN+1)/(wV)\big)$, which is at most the stated bound
+since $w\le N$.
+\end{proof}
+
+Writing $w=2^e w'$ with $w'$ odd, $\lambda(w)=c_e2^{\omega(w')}$ with $c_e=1,1,2,4$ for $e=0,1,2,\ge3$. Hence
+$\lambda_{\max}(N):=\max_{w\le N}\lambda(w)$ is attained at $2^e$ times a product of initial odd primes, and is
+computed exactly.
+
+\begin{lemma}[one witness, $P_7/P_{18}$ target]\label{lem:XY}
+Let $Z$ be a residue class modulo $100$ contained in $P_7$ (or in $P_{18}$), and let $w\le N$ satisfy
+$25\nmid wz+1$ and $4\nmid wz+1$ for $z\in Z$. Let $\delta=1-\prod_{p\in\{3,7,11,13\}}(1-p^{-2})$. Then for
+every $V>P_1$,
+\[
+\#\{z\in Z\cap[1,N]:\ wz+1\text{ non-squarefree}\}\le \tfrac{N}{100}\Big(\delta+\!\!\sum_{13<p\le P_1}\!\!p^{-2}\Big)
++15+\pi(P_1)-\pi(13) + E_X,
+\]
+where $E_X$ is the number of $z$ in the whole class $z\equiv c\pmod{25}$ for which $p^2\mid wz+1$ for some
+$p>P_1$. Moreover
+\[
+E_X\le \sum_{P_1<p\le V}\Big(\frac{N}{25p^2}+1\Big)+\lambda(w)\Big(\frac{N^2+1}{V^2}+\frac{2(N+1)}{V}+1\Big).
+\]
+\end{lemma}
+\begin{proof}
+The primes $2$ and $5$ are excluded by hypothesis. For $p\in S=\{3,7,11,13\}$ with $p\nmid w$, the condition
+$p^2\mid wz+1$ is a single residue class mod $p^2$. By inclusion--exclusion over nonempty subsets $D\subseteq S$,
+each term counts a single class mod $100\prod_{p\in D}p^2$ in $[1,N]$, and so differs from its density by at
+most $1$. This gives the first term, with error at most $2^4-1=15$; dropping primes dividing $w$ only
+decreases the density. For $13<p\le P_1$ use the union bound, each class contributing at most
+$N/(100p^2)+1$. For $p>P_1$, bound over the whole residue class mod $25$: at most $N/(25p^2)+1$ for
+$P_1<p\le V$, and Lemma~\ref{lem:LP} for $p>V$.
+\end{proof}
+
+The quantity $E_X$ depends only on $w$ and the class mod~$25$, so when a single witness bounds several cells
+of the same part, $E_X$ is paid once. If $(w\bmod4)(z\bmod4)\equiv3$ the cell is \emph{free}: we only use the
+trivial bound $\lfloor N/100\rfloor+1$.
+
+\begin{lemma}[the large-$q$ part of $R$]\label{lem:TR}
+Let $L=\{n\le N: q^2\mid n^2+1 \text{ for some } q>Q\}$. For every $V'>Q$,
+\[
+|L|\le T_R:=\sum_{\substack{Q<q\le V'\\ q\equiv1(4)}}\Big(2\Big\lfloor\frac{N}{q^2}\Big\rfloor+2\Big)
++\frac{N^2+1}{V'^2}\Big(\frac12+\frac{\log(2N+1)}{2\log(1+\sqrt2)}\Big).
+\]
+\end{lemma}
+\begin{proof}
+For $q\le V'$, $S_q\cap[1,N]$ consists of two progressions. If $q>V'$ and $q^2\mid n^2+1$, write
+$n^2+1=kq^2$ with $k\le(N^2+1)/V'^2$. Here $k\ge2$ is not a square, since $n^2+1=(aq)^2$ is impossible for
+$n\ge1$. Positive solutions of $x^2-ky^2=-1$ are units of norm $-1$ in $\mathbb Z[\sqrt k]$, so they are of the
+form $\varepsilon^{2j+1}$, where $\varepsilon\ge1+\sqrt2$ is the fundamental unit of that order. Since
+$y\sqrt k=\sqrt{x^2+1}\le x+1$, we get $\varepsilon^{2j+1}\le 2x+1\le2N+1$. So for each $k$ there are at most
+$\frac12+\log(2N+1)/(2\log(1+\sqrt2))$ values of $n$.
+\end{proof}
+
+\begin{definition}
+An element $h\in P_7\cup P_{18}$ is \emph{special} if $q^2\mid h^2+1$ for some prime $q\ge13$.
+\end{definition}
+
+\begin{lemma}[one witness, $R$ target]\label{lem:C}
+Let $h\le N$ with $h\in P_7\cup P_{18}$, let $\tau\in\mathbb Z/4$ with $(h\bmod 4)\tau\not\equiv3$, and let
+$V>P_2\ge Q$. The number of $n\in R\setminus L$ with $n\equiv\tau\pmod 4$ and $hn+1$ non-squarefree is at most
+\[
+\sum_{\substack{13\le q\le Q\\ q\equiv1(4)}}2\Big[\frac{N}{4q^2}\Big(\delta+\!\!\sum_{13<p\le P_2}\!\!p^{-2}\Big)+15+\pi(P_2)-\pi(13)\Big]
++E_C+\mathrm{SP},
+\]
+where $E_C\le\sum_{P_2<p\le V}(N/p^2+1)+\lambda(h)\big((N^2+1)/V^2+2(N+1)/V+1\big)$. Here $\mathrm{SP}=0$ if $h$
+is not special. In general $\mathrm{SP}\le\sum(N/(4q^2)+1)$, summed over the smallest primes
+$q\ge13$, $q\equiv1(4)$, whose squares have product at most $(N^2+1)/25$.
+\end{lemma}
+\begin{proof}
+Every $n\in R\setminus L$ lies in one of the classes $\pm i_q\bmod q^2$ with $13\le q\le Q$. Fix such a class.
+By Lemma~\ref{lem:witness}, $5$ and $2$ cannot help. For $p\in\{3,7,11,13\}$ and $13<p\le P_2$ with $p\ne q$,
+argue as in Lemma~\ref{lem:XY} inside the progression $n\equiv\pm i_q\ (q^2)$, $n\equiv\tau\ (4)$. The prime
+$p=q$ is special: on the class, $hn+1$ is constant modulo $q^2$, and $q^2\mid hn+1$ forces
+$n\equiv-h^{-1}$, which is compatible with $n^2\equiv-1$ iff $h^2\equiv-1\pmod{q^2}$, i.e.\ iff $h$ is special
+at $q$. In that case one whole class $n\equiv h\pmod{q^2}$ is compatible, contributing at most
+$N/(4q^2)+1$. The set of $q$ at which $h$ is special satisfies $25\prod q^2\mid h^2+1\le N^2+1$, so its
+contribution is at most that of the smallest admissible primes. Primes $p>P_2$ are handled globally, over all
+$n\le N$, by Lemma~\ref{lem:LP}.
+\end{proof}
+
+\subsection{Patterns}
+Let $A\subseteq[1,N]$ be a clique with $A\not\subseteq P_7$ and $A\not\subseteq P_{18}$; otherwise
+$|A|\le M(N)$ trivially. Split each of $X$ and $Y$ into four \emph{cells} by residue mod~4. Record, for each
+cell, whether it is empty, nonempty with all elements special, or contains a non-special element. For $C$,
+record which residues mod~4 occur. This gives $3^4\cdot3^4\cdot2^4$ possible \emph{patterns}.
+
+Given the pattern, we bound each part using at most two witness residues from the other parts. We use any
+element of $Y\cup C$ for $X$ and of $X\cup C$ for $Y$. For $C$ we use non-special elements of $X\cup Y$, or
+special ones at the cost of SP. Each cell is bounded by the minimum of the applicable bounds:
+\begin{itemize}
+\item the trivial bound;
+\item Lemma~\ref{lem:XY} or~\ref{lem:C} for the chosen witness;
+\item for a special-only cell of $X$ or $Y$, the bound $\sum_{13\le q\le Q}2(\lfloor N/(100q^2)\rfloor+1)$,
+  since such elements are either in some $S_q$ with $q\le Q$ or lie in $L$.
+\end{itemize}
+Each witness's $E_X$ or $E_C$ is added once per part. Finally we add $T_R$ once, for $A\cap L$. Elements of
+$L$ may be counted twice; this only weakens the bound. Let $\mathrm{UB}(N)$ be the maximum of the resulting
+quantity over all patterns. Then $|A|\le\mathrm{UB}(N)$.
+
+\begin{proposition}\label{prop:grid}
+There are $5\cdot10^8=N^{(0)}<N^{(1)}<\dots<N^{(k)}=10^{35}$ with
+$\mathrm{UB}(N^{(i+1)})<M(N^{(i)})+1$ for all $i$. The maximum of
+$\mathrm{UB}(N^{(i+1)})/(M(N^{(i)})+1)$ is $0.9960$, attained on the first interval.
+\end{proposition}
+
+For $N^{(i)}\le N\le N^{(i+1)}$, a clique in $G_N$ is also a clique in $G_{N^{(i+1)}}$, so
+$|A|\le\mathrm{UB}(N^{(i+1)})<M(N^{(i)})+1\le M(N)+1$. Hence Theorem~\ref{thm:main} holds on
+$[5\cdot10^8,10^{35}]$.
+
+\begin{proposition}[tail]\label{prop:tail}
+For $N\ge10^{35}$, $\mathrm{UB}(N)<M(N)+1$.
+\end{proposition}
+\begin{proof}[Sketch]
+Take $V=V'=N^{2/3}$. Every term of $\mathrm{UB}(N)$ is either linear in $N$ or sublinear. The linear part is at
+most $U_{\rm lin}N$, where $U_{\rm lin}$ is the pattern maximum of the linear coefficients; infinite prime sums
+are bounded by exact partial sums up to $3\cdot10^8$ plus $\sum_{n>3\cdot10^8,\,n\ \text{odd}}n^{-2}$. The
+sublinear part $S(N)$ comes from at most six witness applications, $T_R$, and the bounded inclusion--exclusion
+and rounding constants. It is bounded using $\pi(x)<1.25506\,x/\log x$ \cite{RS62} and
+$\lambda(w)\le4\cdot2^{\omega(w)}\le4\cdot2^{1.38402\log N/\log\log N}$ \cite{Ro83}. Each resulting term of
+$S(N)/N$ is non-increasing for $N\ge10^8$. Since $M(N)+1>N/25$, it suffices that
+$25(U_{\rm lin}+S(10^{35})/10^{35})<1$. In interval arithmetic this quantity is at most $0.7484$, with
+$25U_{\rm lin}\le0.6907$.
+\end{proof}
+
+The computations behind Propositions~\ref{prop:grid} and~\ref{prop:tail} are in
+\texttt{analytic\_rig.py}. All real quantities are evaluated as Arb balls \cite{Arb}, and each is replaced by
+the exact rational upper endpoint of its ball; prime counts and floors are exact integers. The maximisation
+over patterns is then carried out in exact rational arithmetic. The limiting value $\mathrm{UB}(N)/M(N)\to0.691$
+comes from cliques contained in $R$.
+
+\section{Verification and reproducibility}\label{sec:repro}
+\begin{itemize}
+\item \textbf{Small $N$:} \texttt{maxclique\_small 10000} and \texttt{bk\_check.py 5000}: no mismatches.
+\item \textbf{Certificate:} \texttt{dyn\_colour 1000000000 9982 1 log.bin} (about one hour) and
+  \texttt{verify\_log 1000000000 9982 log.bin}: VERIFIED, $121{,}112{,}532$ pairs, $0$ failures.
+\item \textbf{PARI/GP cross-checks:} PARI's \texttt{uissquarefree} confirms that all
+  $121{,}112{,}532$ certificate products $ab+1$ are squarefree. Recomputing the vertex set up to $10^9$ as
+  $\{n:\ \texttt{uissquarefree}(n^2+1)=0\}$ gives $105{,}158{,}686$ vertices, with the same sum and the same
+  sum of squares (mod $2^{64}$) as the verifier's vertex set.
+\item \textbf{Analytic range:} \texttt{analytic\_rig.py grid 5e8 1e35} reports 181 intervals, all
+  satisfied, with worst ratio $0.996034$. \texttt{analytic\_rig.py tail 1e35} reports $0.748362<1$. The grid's
+  top endpoint and the tail's starting point are the same integer,
+  $\lfloor\mathrm{float}(10^{35})\rfloor\approx10^{35}$.
+\item \textbf{Independent review:} an independent AI re-implementation of Section~\ref{sec:analytic},
+  written without access to our code, found $\mathrm{UB}/M\le0.763$ on $[5\cdot10^8,10^{13}]$. Its lemma
+  spot-checks against brute force found no violations.
+\end{itemize}
+
+\subsection*{Acknowledgements} We thank M.~Sawhney, W.~van Doorn, D.~Weisenberg, B.~Alexeev, S.~Cambie and
+N.~Sothanaphan, whose results and comments on the problem's forum thread this work builds on, and T.~Bloom
+for maintaining \texttt{erdosproblems.com}.
+
+\begin{thebibliography}{9}
+\bibitem{Er92b} P.~Erd\H{o}s, \emph{Some of my favourite problems in various branches of combinatorics},
+  Matematiche (Catania) \textbf{47} (1992), 231--240.
+\bibitem{EP848} T.~F.~Bloom, \emph{Erd\H{o}s Problem \#848}, \url{https://www.erdosproblems.com/848}.
+\bibitem{Sa25} M.~Sawhney, note on Erd\H{o}s Problem \#848 (2025), linked from \cite{EP848}.
+\bibitem{So26} N.~Sothanaphan et al., explicit threshold for Erd\H{o}s Problem \#848 (2026), linked from the
+  forum thread of \cite{EP848}.
+\bibitem{RS62} J.~B.~Rosser and L.~Schoenfeld, \emph{Approximate formulas for some functions of prime numbers},
+  Illinois J.\ Math.\ \textbf{6} (1962), 64--94.
+\bibitem{Ro83} G.~Robin, \emph{Estimation de la fonction de Tchebychef $\theta$ sur le $k$-i\`eme nombre premier
+  et grandes valeurs de la fonction $\omega(n)$}, Acta Arith.\ \textbf{42} (1983), 367--389.
+\bibitem{Arb} F.~Johansson, \emph{Arb: efficient arbitrary-precision midpoint-radius interval arithmetic},
+  IEEE Trans.\ Comput.\ \textbf{66} (2017), 1281--1292.
+\end{thebibliography}
+
+\end{document}
