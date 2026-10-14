@@ -38,10 +38,15 @@ result below is proved with no `sorry`, and `#print axioms` shows only the stand
 - **inclusion–exclusion with bounded error** (core of paper Lemma 7), `ie_count_le` / `ie_count_abs`: for
   `Z = {z ∈ [1,N] : z ≡ c (mod q)}` and residue conditions `z ≡ r_i (mod d_i)`, `i ∈ S`, with the `d_i` pairwise
   coprime and coprime to `q`, the number of `z ∈ Z` meeting some condition is within `2^|S| − 1` of
-  `N/q·(1 − Π(1 − 1/d_i))`; prime-square form `ie_prime_squares` (`d_p = p²`, `p ∈ S` prime, `p ∤ q`).
+  `N/q·(1 − Π(1 − 1/d_i))`; prime-square form `ie_prime_squares` (`d_p = p²`, `p ∈ S` prime, `p ∤ q`);
+- **the negative Pell count** (used in paper Lemma 8), `pell_neg_count`: for `k ≥ 2`,
+  `#{x ∈ [1,N] : ∃ y, x² + 1 = k y²} ≤ 1/2 + log(2N+1)/(2 log(1+√2))`. The proof is elementary (no unit
+  theory): two solutions `x < x'` satisfy `η' ≥ (1+√2)² η` with `η = x + y√k` (`pell_ratio`), and
+  `1+√2 ≤ η ≤ 2x+1`.
 
 Not yet formalised: the assembly of Lemmas 7 and 9 from these pieces (union bound over mid-range primes, the
-special prime `q`), Lemma 8, the Pell bound, the pattern
+special prime `q`), the rest of Lemma 8 (the `q ≤ V'` progressions and the reduction
+`n²+1 = kq²`), the pattern
 argument, and the link to the numerical certificates.
 
 ## Verify with your own AI
