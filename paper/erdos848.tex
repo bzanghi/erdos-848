@@ -18,15 +18,16 @@
 
 \title[Erd\H{o}s Problem \#848 for all $N$]{Erd\H{o}s Problem \#848 holds for every $N$:\\ a computer-assisted completion of Sawhney's theorem}
 \author{Ben Zanghi}
-\date{Draft of 12 October 2026 --- not yet refereed}
+\date{Draft of 13 October 2026 (v0.2, adds prior work) --- not yet refereed}
 
 \begin{document}
 
 \begin{abstract}
 Erd\H{o}s and S\'ark\"ozy asked whether the largest $A\subseteq\{1,\dots,N\}$ such that $ab+1$ is never
 squarefree for $a,b\in A$ is given by the residue class $7 \bmod 25$. Sawhney proved this for all sufficiently
-large $N$; the best explicit threshold previously available was $N_0=\exp(1420)$. We prove the statement for
-every $N\ge 1$ (with $a=b$ allowed). The proof has three parts: an exact computation for $N\le 10^4$, a
+large $N$; an explicit threshold was later given by Sothanaphan. We give an independent proof of the
+statement for every $N\ge 1$ (with $a=b$ allowed); earlier all-$N$ claims by Li and by Pitchford are
+discussed in the introduction. The proof has three parts: an exact computation for $N\le 10^4$, a
 dynamically maintained colouring certificate for $10^4\le N\le 10^9$ that is replayed by an independent
 verifier, and a new elementary explicit argument for $N\ge 5\cdot 10^8$ whose numerical inequalities are
 checked in interval arithmetic. The argument for large $N$ is self-contained and does not use Sawhney's
@@ -54,8 +55,20 @@ database \cite{EP848}. Van Doorn observed that every admissible set has density 
 $2\sum_{p\equiv1(4)}p^{-2}\approx 0.108$, Weisenberg improved this to $\approx0.105$, and Sawhney
 \cite{Sa25} proved that the answer is yes for all sufficiently large $N$, together with a stability
 statement. An explicit version of Sawhney's argument, produced with AI assistance by Sothanaphan and others,
-gives the threshold $N_0=\exp(1420)$ \cite{So26}. Direct computation had been carried out for $N$ up to a few
-hundred.
+gives an explicit threshold, first $N_0=\exp(1420)$ and later lowered to $2.64\cdot10^{17}$ \cite{So26}.
+
+\emph{Prior work on all $N$.} After this manuscript was first posted, we learned of earlier, independent claims
+to resolve the problem for every $N$, which we gratefully acknowledge:
+\begin{itemize}
+\item A.~C.~Li, a computer-assisted proof with a Lean formalisation (July--August 2026; filed as a proof claim
+  on erdosproblems.com on 16 August 2026) \cite{Li26};
+\item I.~Pitchford, with OpenAI Codex, certificates up to $2.64\cdot10^{17}$ combined with the explicit
+  threshold (28 July 2026) \cite{Pi26};
+\item a further independent Claude-produced verification posted on 8 October 2026 \cite{AC26}.
+\end{itemize}
+To our knowledge none of these has yet been refereed. The present paper is therefore an independent confirmation
+by a different method. Its large-$N$ argument is elementary and does not use Sawhney's stability theorem. It is
+combined with a colouring certificate up to $10^9$ that is checked by independent software.
 
 \begin{theorem}\label{thm:main}
 For every $N\ge1$ and every admissible $A\subseteq[1,N]$ we have $|A|\le M(N)$. In particular, the
@@ -344,7 +357,13 @@ comes from cliques contained in $R$.
 N.~Sothanaphan, whose results and comments on the problem's forum thread this work builds on, and T.~Bloom
 for maintaining \texttt{erdosproblems.com}.
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
+\bibitem{Li26} A.~C.~Li, computer-assisted proof and Lean formalisation of Erd\H{o}s Problem 848 (2026),
+  \url{https://github.com/crabsatellite/erdos-848-squarefree-product}; SSRN 7230480.
+\bibitem{Pi26} I.~Pitchford, \emph{Unrefereed candidate all-$N$ determination for Erd\H{o}s Problem 848}
+  (2026), \url{https://github.com/ipitchford/erdos-848-all-n}; Zenodo 21647629.
+\bibitem{AC26} AstroCat93, \emph{Independent computer-assisted verification of Erd\H{o}s Problem \#848}
+  (2026), \url{https://github.com/AstroCat93/erdos-848-verification}.
 \bibitem{Er92b} P.~Erd\H{o}s, \emph{Some of my favourite problems in various branches of combinatorics},
   Matematiche (Catania) \textbf{47} (1992), 231--240.
 \bibitem{EP848} T.~F.~Bloom, \emph{Erd\H{o}s Problem \#848}, \url{https://www.erdosproblems.com/848}.

@@ -3,7 +3,22 @@
 **Claim.** For every N ≥ 1, the largest A ⊆ {1,…,N} such that ab+1 is never squarefree (a, b ∈ A, a = b
 allowed) has exactly #{n ≤ N : n ≡ 7 (mod 25)} elements, so the residue class 7 mod 25 is optimal. This is
 [Erdős Problem #848](https://www.erdosproblems.com/848) (Erdős–Sárközy). Sawhney proved it for all sufficiently
-large N; the best previous explicit threshold was exp(1420). This repository covers every N.
+large N, and Sothanaphan (with GPT-5.4) made the threshold explicit, ultimately at 2.64·10¹⁷.
+
+**Prior and parallel all-N claims.** This is **not** the first claimed resolution for all N. We learned of the
+following after publishing, and they predate or parallel this work:
+- **Alex Chengyu Li** (July–August 2026): computer-assisted proof with a Lean formalisation,
+  [crabsatellite/erdos-848-squarefree-product](https://github.com/crabsatellite/erdos-848-squarefree-product),
+  SSRN 7230480. Filed as proof claim #204 on erdosproblems.com on 2026-08-16.
+- **Ian Pitchford** (with OpenAI Codex, 2026-07-28): [ipitchford/erdos-848-all-n](https://github.com/ipitchford/erdos-848-all-n),
+  Zenodo 21647629. Certificates up to 2.64·10¹⁷, then Sothanaphan's explicit threshold.
+- **AstroCat93** (2026-10-08, Claude-produced): [AstroCat93/erdos-848-verification](https://github.com/AstroCat93/erdos-848-verification).
+
+As far as we know, none of these has been refereed, and as of the latest snapshots erdosproblems.com still lists
+#848 as "decidable". This repository is best read as an **independent confirmation by a different method**:
+- an elementary explicit argument from 5·10⁸, which does not use Sawhney's stability theorem;
+- a colouring certificate up to 10⁹;
+- interval arithmetic, and PARI/GP cross-checks.
 
 **Status: preprint, not yet refereed.** Scrutiny is very welcome; please open an issue.
 
