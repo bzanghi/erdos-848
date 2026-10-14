@@ -31,7 +31,10 @@ result below is proved with no `sorry`, and `#print axioms` shows only the stand
 - the witness facts mod 25 and mod 4 (paper Lemma 3);
 - `4 ∤ n²+1`; `p ≡ 3 (mod 4)` ⇒ `p ∤ n²+1`; `25 ∣ n²+1 ⇔ n ≡ ±7 (mod 25)`;
 - the residue class 7 mod 25 is admissible;
-- **the large-prime lemma** (paper Lemma 6), integer form `large_prime_count`.
+- **the large-prime lemma** (paper Lemma 6), integer form `large_prime_count`;
+- the large-prime lemma in the paper's real form, `large_prime_count_real`: for `1 ≤ w ≤ N` and real `V ≥ 1`,
+  `#{z ∈ [1,N] : ∃ prime p > V, p² ∣ wz+1} ≤ λ(w)·((N²+1)/V² + 2(N+1)/V + 1)` (via `sum_inv_sqrt_le`:
+  `Σ_{m≤K} m^{-1/2} ≤ 2√K`).
 
 Not yet formalised: the inclusion–exclusion and R-target lemmas (Lemmas 7–9), the Pell bound, the pattern
 argument, and the link to the numerical certificates.
