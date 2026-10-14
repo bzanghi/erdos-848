@@ -34,9 +34,14 @@ result below is proved with no `sorry`, and `#print axioms` shows only the stand
 - **the large-prime lemma** (paper Lemma 6), integer form `large_prime_count`;
 - the large-prime lemma in the paper's real form, `large_prime_count_real`: for `1 ≤ w ≤ N` and real `V ≥ 1`,
   `#{z ∈ [1,N] : ∃ prime p > V, p² ∣ wz+1} ≤ λ(w)·((N²+1)/V² + 2(N+1)/V + 1)` (via `sum_inv_sqrt_le`:
-  `Σ_{m≤K} m^{-1/2} ≤ 2√K`).
+  `Σ_{m≤K} m^{-1/2} ≤ 2√K`);
+- **inclusion–exclusion with bounded error** (core of paper Lemma 7), `ie_count_le` / `ie_count_abs`: for
+  `Z = {z ∈ [1,N] : z ≡ c (mod q)}` and residue conditions `z ≡ r_i (mod d_i)`, `i ∈ S`, with the `d_i` pairwise
+  coprime and coprime to `q`, the number of `z ∈ Z` meeting some condition is within `2^|S| − 1` of
+  `N/q·(1 − Π(1 − 1/d_i))`; prime-square form `ie_prime_squares` (`d_p = p²`, `p ∈ S` prime, `p ∤ q`).
 
-Not yet formalised: the inclusion–exclusion and R-target lemmas (Lemmas 7–9), the Pell bound, the pattern
+Not yet formalised: the assembly of Lemmas 7 and 9 from these pieces (union bound over mid-range primes, the
+special prime `q`), Lemma 8, the Pell bound, the pattern
 argument, and the link to the numerical certificates.
 
 ## Verify with your own AI
